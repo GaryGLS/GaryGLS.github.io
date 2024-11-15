@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Barcode Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-column {
+            flex: 1;
+        }
+
+        .barcode-column {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #add-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Dynamic Barcode Generator</h2>
+        <!-- Container for dynamic rows -->
+        <div id="barcodeContainer"></div>
+        <!-- Button to add new row -->
+        <button id="add-button">+ Add Barcode</button>
+    </div>
+
+    <script>
+        // Function to create a new row with input and barcode display
+        function createBarcodeRow() {
+            // Create the row container
+            const row = document.createElement('div');
+            row.classList.add('row');
+
+            // Create input column
+            const inputCol = document.createElement('div');
+            inputCol.classList.add('input-column');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Enter barcode value';
+            input.addEventListener('input', () => generateBarcode(input, barcodeSvg));
+            inputCol.appendChild(input);
+
+            // Create barcode display column
+            const barcodeCol = document.createElement('div');
+            barcodeCol.classList.add('barcode-column');
+            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            barcodeSvg.style.width = '100%';
+            barcodeCol.appendChild(barcodeSvg);
+
+            // Append columns to row
+            row.appendChild(inputCol);
+            row.appendChild(barcodeCol);
+
+            // Append row to container
+            document.getElementById('barcodeContainer').appendChild(row);
+        }
+
+        // Function to generate a barcode in the specified SVG element
+        function generateBarcode(inputElement, svgElement) {
+            const value = inputElement.value.trim();
+            if (value) {
+                JsBarcode(svgElement, value, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 2,
+                    height: 60,
+                    displayValue: true
+                });
+            } else {
+                svgElement.innerHTML = ""; // Clear SVG if input is empty
+            }
+        }
+
+        // Add initial row on load
+        createBarcodeRow();
+
+        // Add new row when "+ Add Barcode" button is clicked
+        document.getElementById('add-button').addEventListener('click', createBarcodeRow);
+    </script>
+</body>
+</html>
