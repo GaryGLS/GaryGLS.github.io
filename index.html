@@ -3,24 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gary's Barcode Generator</title>
+    <title>Dynamic Barcode Generator</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            z-index: 10;
+        }
+
+        .top-bar input {
+            flex: 1;
+            margin-right: 10px;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .top-bar button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 20px;
         }
 
         .row {
             display: flex;
-            gap: 10px;
+            gap: 20px;
             margin-bottom: 15px;
             align-items: center;
-        }
-
-        .input-column {
-            flex: 1;
         }
 
         .barcode-column {
@@ -30,42 +60,56 @@
             align-items: center;
         }
 
-        #add-button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
+        .info-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #live-preview {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #live-preview svg {
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Gary's Barcode Generator</h2>
-        <!-- Container for dynamic rows -->
-        <div id="barcodeContainer"></div>
-        <!-- Button to add new row -->
-        <button id="add-button">+ Add Barcode</button>
+    <div class="top-bar">
+        <input type="text" id="manual-barcode-input" placeholder="Enter barcode number" />
+        <button id="add-barcode-button">Add Barcode</button>
+        <button id="upload-button">Upload parcel data entity JSON File</button>
+        <input type="file" id="file-input" accept=".json">
     </div>
 
+    <div class="container">
+        <!-- Live preview for the manual barcode -->
+        <div id="live-preview"></div>
+        <!-- Container for dynamic rows -->
+        <div id="barcodeContainer"></div>
+    </div>
+
+    <!-- Add accept attribute to file input -->
+    <input type="file" id="file-input" accept=".json" style="display: none;">
+
     <script>
-        // Function to create a new row with input and barcode display
-        function createBarcodeRow() {
-            // Create the row container
+        // Create a live preview for the manually entered barcode
+        const livePreviewContainer = document.getElementById('live-preview');
+        const livePreviewSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        livePreviewSvg.style.width = '100%';
+        livePreviewContainer.appendChild(livePreviewSvg);
+
+        function createBarcodeRow(id, name = "", weight = "", address = "") {
             const row = document.createElement('div');
             row.classList.add('row');
-
-            // Create input column
-            const inputCol = document.createElement('div');
-            inputCol.classList.add('input-column');
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Enter barcode value';
-            input.addEventListener('input', () => generateBarcode(input, barcodeSvg));
-            inputCol.appendChild(input);
 
             // Create barcode display column
             const barcodeCol = document.createElement('div');
@@ -74,19 +118,46 @@
             barcodeSvg.style.width = '100%';
             barcodeCol.appendChild(barcodeSvg);
 
+            // Generate barcode
+            JsBarcode(barcodeSvg, id, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 60,
+                displayValue: true
+            });
+
+            // Create info column for JSON data (optional)
+            const infoCol = document.createElement('div');
+            infoCol.classList.add('info-column');
+            if (name || weight || address) {
+                const nameEl = document.createElement('p');
+                nameEl.textContent = `Receipient Name: ${name}`;
+                const addressEl = document.createElement('p');
+                addressEl.textContent = `Address: ${address}`;
+                const weightEl = document.createElement('p');
+                weightEl.textContent = `Weight: ${weight}`;
+                infoCol.appendChild(nameEl);
+                infoCol.appendChild(addressEl);
+                infoCol.appendChild(weightEl);
+            }
+
             // Append columns to row
-            row.appendChild(inputCol);
             row.appendChild(barcodeCol);
+            if (name || weight || address) {
+                row.appendChild(infoCol);
+            }
 
             // Append row to container
-            document.getElementById('barcodeContainer').appendChild(row);
+            document.getElementById('barcodeContainer').prepend(row); // Add new barcode at the top
         }
 
-        // Function to generate a barcode in the specified SVG element
-        function generateBarcode(inputElement, svgElement) {
-            const value = inputElement.value.trim();
+        // Live update the barcode preview while typing
+        const manualInput = document.getElementById('manual-barcode-input');
+        manualInput.addEventListener('input', () => {
+            const value = manualInput.value.trim();
             if (value) {
-                JsBarcode(svgElement, value, {
+                JsBarcode(livePreviewSvg, value, {
                     format: "CODE128",
                     lineColor: "#000",
                     width: 2,
@@ -94,15 +165,74 @@
                     displayValue: true
                 });
             } else {
-                svgElement.innerHTML = ""; // Clear SVG if input is empty
+                livePreviewSvg.innerHTML = ""; // Clear live preview if input is empty
+            }
+        });
+
+        // Add barcode when button is clicked
+        function addBarcode() {
+            const value = manualInput.value.trim();
+            if (value) {
+                createBarcodeRow(value);
+                manualInput.value = ""; // Clear input
+                livePreviewSvg.innerHTML = ""; // Clear live preview
+            } else {
+                alert("Please enter a valid barcode number.");
             }
         }
 
-        // Add initial row on load
-        createBarcodeRow();
+        // Trigger "Add Barcode" on Enter key press
+        manualInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission or page reload
+                addBarcode();
+            }
+        });
 
-        // Add new row when "+ Add Barcode" button is clicked
-        document.getElementById('add-button').addEventListener('click', createBarcodeRow);
+        document.getElementById('add-barcode-button').addEventListener('click', addBarcode);
+
+        // Handle file upload
+        document.getElementById('upload-button').addEventListener('click', () => {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Check if the selected file is the desired one
+                const desiredFileName = "hsc.parceldataentity.json";
+                if (file.name !== desiredFileName) {
+                    alert(`Please select the file named "${desiredFileName}".`);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                const id = item.ParcelId || "";
+                                const name = item.DeliveryName || "Unknown Name";
+                                const weight = item.ActualWeight || "Unknown Weight";
+                                const address = item.DeliveryAddress || "Unknown Address";
+
+                                if (id) {
+                                    createBarcodeRow(id, name, weight, address);
+                                } else {
+                                    console.warn("Skipping item due to missing 'id':", item);
+                                }
+                            });
+                        } else {
+                            console.error("Invalid JSON structure, expected an array.");
+                        }
+                    } catch (error) {
+                        console.error("Error parsing JSON file:", error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
     </script>
 </body>
 </html>
