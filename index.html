@@ -1,354 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Barcode Generator</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Barcode Website</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-    .top-bar {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        padding: 10px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #ddd;
-        z-index: 10;
+    /* Sticky filter bar */
+    .filter-bar {
+      position: sticky;
+      top: 0;
+      background: #f8f8f8;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      z-index: 1000;
     }
 
-    .top-bar input {
-        flex: 1;
-        margin-right: 10px;
-        padding: 8px;
-        font-size: 16px;
-    }
+    .filter-bar label { margin-right: 12px; font-weight: bold; }
 
-    .top-bar button {
-        margin-left: 10px;
-        padding: 10px 20px;
-        background-color: #007BFF;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 20px auto;
-        padding: 20px;
-    }
-
+    /* Cards grid */
     #barcodeContainer {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 18px;
-        width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
     }
 
     .barcode-card {
-        position: relative; /* Needed for absolute positioning of close button */
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 10px 8px 6px 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      font-family: sans-serif;
     }
 
-    .close-btn {
-        position: absolute;
-        top: 4px;
-        right: 6px;
-        background: transparent;
-        border: none;
-        color: #888;
-        font-size: 18px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0;
-        z-index: 2;
-        transition: color 0.2s;
-    }
-    .close-btn:hover {
-        color: #d00;
-    }
+    .card-row { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; }
+    .barcode-svg, .qr { width: 80px; height: 80px; }
 
-    .barcode-svg {
-        width: 100%;
-        max-width: 200px;
-        min-height: 60px;
-        margin-bottom: 6px;
-    }
+    .badges span { display: inline-block; background: #007bff; color: white; padding: 2px 6px; margin: 2px; border-radius: 4px; font-size: 12px; }
+    .meta { margin-bottom: 10px; }
 
-    .barcode-info {
-        width: 100%;
-        font-size: 13px;
-        line-height: 1.2;
-        color: #333;
-        text-align: left;
-        word-break: break-word;
-    }
-
-    .barcode-info p {
-        margin: 0 0 2px 0;
-        padding: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0; top: 0;
-        width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.3);
-        justify-content: center;
-        align-items: center;
-    }
-    .modal-content {
-        background: #fff;
-        padding: 24px 24px 16px 24px;
-        border-radius: 8px;
-        min-width: 260px;
-        min-height: 120px;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.18);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .close-modal {
-        position: absolute;
-        top: 8px;
-        right: 14px;
-        font-size: 22px;
-        color: #888;
-        cursor: pointer;
-        font-weight: bold;
-        background: none;
-        border: none;
-        z-index: 2;
-    }
-    .close-modal:hover {
-        color: #d00;
-    }
-
-    #live-preview svg {
-        width: 100%;
-        max-width: 200px;
-    }
-</style>
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    td { border: 1px solid #ddd; padding: 4px; font-size: 12px; }
+    .address-title { font-weight: bold; text-align: center; }
+  </style>
 </head>
 <body>
-    <div class="top-bar">
-        <input type="text" id="manual-barcode-input" placeholder="Enter barcode number" />
-        <button id="add-barcode-button">Add Barcode</button>
-        <button id="upload-button">Upload parcel data entity JSON File</button>
-    </div>
 
-    <div class="container">
+<!-- Filter bar -->
+<div class="filter-bar">
+  <label><input type="checkbox" value="PakkeShop" checked> PakkeShop</label>
+  <label><input type="checkbox" value="PRS" checked> PRS</label>
+  <label><input type="checkbox" value="IsDeposit" checked> IsDeposit</label>
+  <label><input type="checkbox" value="Express" checked> Express</label>
+</div>
 
-        <h1>HaandScanner barcode generator</h1>
-        <!-- Live preview for the manual barcode -->
-        <div id="live-preview"></div>
-        <!-- Container for dynamic rows -->
-        <div id="barcodeContainer"></div>
-    </div>
+<!-- Cards container -->
+<div id="barcodeContainer"></div>
 
-    <!-- Modal for live preview -->
-    <div id="preview-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="close-modal">&times;</span>
-            <div id="live-preview"></div>
-        </div>
-    </div>
+<!-- Embedded parcels JSON -->
+<script type="application/json" id="parcels-data">
+[
+  {
+    "ParcelId": "416250340336",
+    "ParcelShopIdLong": null,
+    "IsPickAndReturnOrShip": false,
+    "IsExpress10": false,
+    "IsExpress12": false,
+    "IsAddresseeOnly": false,
+    "IsDeposit": false,
+    "DepositInstruction": null,
+    "DeliveryName": "GLS IT",
+    "DeliveryStreetName": "Kokmose",
+    "DeliveryHouseNumber": "3",
+    "DeliveryZipCode": "6000",
+    "DeliveryCity": "Kolding",
+    "ShipperStreetName": "Wilders Pl.",
+    "ShipperHouseNumber": "8K",
+    "ShipperZipCode": "1403",
+    "ShipperCity": "København",
+    "ActualWeight": "5.30"
+  },
+  {
+    "ParcelId": "416250340337",
+    "ParcelShopIdLong": 12345,
+    "IsPickAndReturnOrShip": true,
+    "IsExpress10": true,
+    "IsExpress12": false,
+    "IsAddresseeOnly": false,
+    "IsDeposit": true,
+    "DepositInstruction": "Leave at reception",
+    "DeliveryName": "John Doe",
+    "DeliveryStreetName": "Main St",
+    "DeliveryHouseNumber": "12",
+    "DeliveryZipCode": "1000",
+    "DeliveryCity": "Copenhagen",
+    "ShipperStreetName": "Factory St",
+    "ShipperHouseNumber": "1A",
+    "ShipperZipCode": "2000",
+    "ShipperCity": "Copenhagen",
+    "ActualWeight": "2.75"
+  }
+]
+</script>
 
-    <!-- Add accept attribute to file input -->
-    <input type="file" id="file-input" accept=".json" style="display: none;">
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-    <script>
-        // Modal logic
-        const previewModal = document.getElementById('preview-modal');
-        const closeModalBtn = document.getElementById('close-modal');
-        const livePreviewContainer = document.getElementById('live-preview');
-        const livePreviewSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        livePreviewSvg.style.width = '100%';
-        livePreviewContainer.appendChild(livePreviewSvg);
+<script>
+const container = document.getElementById('barcodeContainer');
+const parcels = JSON.parse(document.getElementById('parcels-data').textContent);
 
-        function showPreviewModal() {
-            previewModal.style.display = 'flex';
-        }
-        function hidePreviewModal() {
-            previewModal.style.display = 'none';
-            livePreviewSvg.innerHTML = '';
-            manualInput.value = '';
-        }
+// Create dynamic filter
+const checkboxes = document.querySelectorAll('.filter-bar input[type="checkbox"]');
+function applyFilters() {
+  const active = Array.from(checkboxes).filter(c=>c.checked).map(c=>c.value);
+  document.querySelectorAll('.barcode-card').forEach(card => {
+    const types = card.dataset.types.split(',');
+    card.style.display = types.some(t => active.includes(t)) ? '' : 'none';
+  });
+}
+checkboxes.forEach(cb => cb.addEventListener('change', applyFilters));
 
-        // Show modal when typing in input
-        const manualInput = document.getElementById('manual-barcode-input');
-        manualInput.addEventListener('input', () => {
-            const value = manualInput.value.trim();
-            if (value) {
-                JsBarcode(livePreviewSvg, value, {
-                    format: "CODE128",
-                    lineColor: "#000",
-                    width: 2,
-                    height: 60,
-                    displayValue: true
-                });
-                showPreviewModal();
-            } else {
-                hidePreviewModal();
-            }
-        });
+// Utility functions
+function escapeHtml(text){ return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatAddress(street, house, zip, city){ return `${street} ${house}, ${zip} ${city}`; }
+function text(s){ return String(s||''); }
 
-        // Hide modal on close button click
-        closeModalBtn.onclick = hidePreviewModal;
+// Create card
+function createParcelCard(item){
+  const card = document.createElement('div');
+  card.className='barcode-card';
 
-        // Hide modal when clicking outside modal content
-        previewModal.onclick = function(event) {
-            if (event.target === previewModal) {
-                hidePreviewModal();
-            }
-        };
+  // Collect badge types
+  const types=[];
+  const badges = document.createElement('div'); badges.className='badges';
 
-        // Hide modal on Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                hidePreviewModal();
-            }
-        });
+  if(item.ParcelShopIdLong){ badges.appendChild(Object.assign(document.createElement('span'), {textContent:'PakkeShop'})); types.push('PakkeShop'); }
+  if(item.IsPickAndReturnOrShip){ badges.appendChild(Object.assign(document.createElement('span'), {textContent:'PRS'})); types.push('PRS'); }
+  if(item.IsExpress10||item.IsExpress12){ badges.appendChild(Object.assign(document.createElement('span'), {textContent:'Express'})); types.push('Express'); }
+  if(item.IsAddresseeOnly){ badges.appendChild(Object.assign(document.createElement('span'), {textContent:'AddressOnly'})); types.push('AddressOnly'); }
+  if(item.IsDeposit){ badges.appendChild(Object.assign(document.createElement('span'), {textContent:'IsDeposit'})); types.push('IsDeposit'); }
 
-        function createBarcodeRow(id, name = "", weight = "", address = "") {
-            // Create card container
-            const card = document.createElement('div');
-            card.classList.add('barcode-card');
+  card.dataset.types = types.join(',');
 
-            // Create close button
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'close-btn';
-            closeBtn.innerHTML = '&times;';
-            closeBtn.title = 'Remove';
-            closeBtn.onclick = () => card.remove();
-            card.appendChild(closeBtn);
+  // QR + 1D
+  const row = document.createElement('div'); row.className='card-row';
+  const qrDiv = document.createElement('div'); qrDiv.className='qr'; row.appendChild(qrDiv);
+  const barcodeSvg = document.createElementNS('http://www.w3.org/2000/svg','svg'); barcodeSvg.className='barcode-svg'; row.appendChild(barcodeSvg);
 
-            // Create barcode SVG
-            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            barcodeSvg.classList.add('barcode-svg');
-            card.appendChild(barcodeSvg);
+  card.appendChild(row);
 
-            // Generate barcode
-            JsBarcode(barcodeSvg, id, {
-                format: "CODE128",
-                lineColor: "#000",
-                width: 2,
-                height: 60,
-                displayValue: true
-            });
+  // Meta
+  const meta = document.createElement('div'); meta.className='meta';
+  meta.appendChild(document.createTextNode(`ParcelId: ${item.ParcelId}`));
+  meta.appendChild(document.createElement('br'));
+  meta.appendChild(document.createTextNode(`Delivery: ${item.DeliveryName}`));
+  meta.appendChild(document.createElement('br'));
+  meta.appendChild(document.createTextNode(`Weight: ${parseFloat(item.ActualWeight).toFixed(2)} kg`));
+  meta.appendChild(document.createElement('br'));
+  meta.appendChild(badges);
 
-            // Info below barcode
-            const infoDiv = document.createElement('div');
-            infoDiv.classList.add('barcode-info');
-            if (name || weight || address) {
-                if (name) {
-                    const nameEl = document.createElement('p');
-                    nameEl.textContent = name;
-                    infoDiv.appendChild(nameEl);
-                }
-                if (address) {
-                    const addressEl = document.createElement('p');
-                    addressEl.textContent = address;
-                    infoDiv.appendChild(addressEl);
-                }
-                if (weight) {
-                    const weightEl = document.createElement('p');
-                    weightEl.textContent = weight;
-                    infoDiv.appendChild(weightEl);
-                }
-            }
-            card.appendChild(infoDiv);
+  if(item.IsDeposit && item.DepositInstruction){
+    const instr = document.createElement('div'); instr.style.fontSize='12px'; instr.textContent=`Deposit: ${item.DepositInstruction}`;
+    meta.appendChild(instr);
+  }
 
-            // Add card to grid
-            document.getElementById('barcodeContainer').prepend(card);
-        }
+  card.appendChild(meta);
 
-        // Add barcode when button is clicked
-        function addBarcode() {
-            const value = manualInput.value.trim();
-            if (value) {
-                createBarcodeRow(value);
-                manualInput.value = ""; // Clear input
-                livePreviewSvg.innerHTML = ""; // Clear live preview
-                hidePreviewModal(); // Dismiss the modal
-            } else {
-                alert("Please enter a valid barcode number.");
-            }
-        }
+  // FROM / TO table
+  const table = document.createElement('table');
+  table.innerHTML=`
+    <tr><td class="address-title">FROM</td><td class="address-title">TO</td></tr>
+    <tr>
+      <td>${escapeHtml(formatAddress(item.ShipperStreetName,item.ShipperHouseNumber,item.ShipperZipCode,item.ShipperCity))}</td>
+      <td>${escapeHtml(formatAddress(item.DeliveryStreetName,item.DeliveryHouseNumber,item.DeliveryZipCode,item.DeliveryCity))}</td>
+    </tr>
+  `;
+  card.appendChild(table);
 
-        // Trigger "Add Barcode" on Enter key press
-        manualInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission or page reload
-                addBarcode();
-            }
-        });
+  // Generate barcodes
+  try{ JsBarcode(barcodeSvg,item.ParcelId||'UNKNOWN',{format:'CODE128',lineColor:'#000',width:2,height:48,displayValue:true,fontSize:12}); }catch(e){}
+  try{ new QRCode(qrDiv,{text:item.ParcelId||'',width:72,height:72,correctLevel:QRCode.CorrectLevel.H}); }catch(e){}
 
-        document.getElementById('add-barcode-button').addEventListener('click', addBarcode);
+  container.appendChild(card);
 
-        // Handle file upload
-        document.getElementById('upload-button').addEventListener('click', () => {
-            document.getElementById('file-input').click();
-        });
+  // Apply current filter
+  applyFilters();
+}
 
-        document.getElementById('file-input').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (Array.isArray(data)) {
-                            data.forEach(item => {
-                                const id = item.ParcelId || "";
-                                const name = item.DeliveryName || "Unknown Name";
-                                const weight = item.ActualWeight || "Unknown Weight";
-                                const street = item.DeliveryStreetName || "Unknown Street";
-                                const houseNumber = item.DeliveryHouseNumber || "Unknown House Number";
-                                const city = item.DeliveryCity || "Unknown City";
-                                const zipcode = item.DeliveryZipCode || "Unknown Zip Code";
-                                const address = `${street} ${houseNumber}, ${city} ${zipcode}`;
-
-                                if (id) {
-                                    createBarcodeRow(id, name, weight, address);
-                                } else {
-                                    console.warn("Skipping item due to missing 'id':", item);
-                                }
-                            });
-                        } else {
-                            console.error("Invalid JSON structure, expected an array.");
-                        }
-                    } catch (error) {
-                        console.error("Error parsing JSON file:", error);
-                    }
-                };
-                reader.readAsText(file);
-            }
-        });
-    </script>
+// Generate all cards
+parcels.forEach(createParcelCard);
+</script>
 </body>
 </html>
