@@ -218,7 +218,11 @@
                                 const id = item.ParcelId || "";
                                 const name = item.DeliveryName || "Unknown Name";
                                 const weight = item.ActualWeight || "Unknown Weight";
-                                const address = item.DeliveryAddress || "Unknown Address";
+                                const street = item.DeliveryStreetName || "Unknown Street";
+                                const houseNumber = item.DeliveryHouseNumber || "Unknown House Number";
+                                const city = item.DeliveryCity || "Unknown City";
+                                const zipcode = item.DeliveryZipCode || "Unknown Zip Code";
+                                const address = `${street} ${houseNumber}, ${city} ${zipcode}`;
 
                                 if (id) {
                                     createBarcodeRow(id, name, weight, address);
