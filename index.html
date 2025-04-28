@@ -199,13 +199,6 @@
         document.getElementById('file-input').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
-                // Check if the selected file is the desired one
-                const desiredFileName = "hsc.parceldataentity.json";
-                if (file.name !== desiredFileName) {
-                    alert(`Please select the file named "${desiredFileName}".`);
-                    return;
-                }
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
