@@ -108,10 +108,42 @@
         text-overflow: ellipsis;
     }
 
-    #live-preview {
-        display: flex;
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.3);
         justify-content: center;
-        margin-bottom: 20px;
+        align-items: center;
+    }
+    .modal-content {
+        background: #fff;
+        padding: 24px 24px 16px 24px;
+        border-radius: 8px;
+        min-width: 260px;
+        min-height: 120px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .close-modal {
+        position: absolute;
+        top: 8px;
+        right: 14px;
+        font-size: 22px;
+        color: #888;
+        cursor: pointer;
+        font-weight: bold;
+        background: none;
+        border: none;
+        z-index: 2;
+    }
+    .close-modal:hover {
+        color: #d00;
     }
 
     #live-preview svg {
@@ -128,76 +160,40 @@
     </div>
 
     <div class="container">
-        <!-- Live preview for the manual barcode -->
-        <div id="live-preview"></div>
         <!-- Container for dynamic rows -->
         <div id="barcodeContainer"></div>
+    </div>
+
+    <!-- Modal for live preview -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <div id="live-preview"></div>
+        </div>
     </div>
 
     <!-- Add accept attribute to file input -->
     <input type="file" id="file-input" accept=".json" style="display: none;">
 
     <script>
-        // Create a live preview for the manually entered barcode
+        // Modal logic
+        const previewModal = document.getElementById('preview-modal');
+        const closeModalBtn = document.getElementById('close-modal');
         const livePreviewContainer = document.getElementById('live-preview');
         const livePreviewSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         livePreviewSvg.style.width = '100%';
         livePreviewContainer.appendChild(livePreviewSvg);
 
-        function createBarcodeRow(id, name = "", weight = "", address = "") {
-        // Create card container
-        const card = document.createElement('div');
-        card.classList.add('barcode-card');
-
-        // Create close button
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-btn';
-        closeBtn.innerHTML = '&times;';
-        closeBtn.title = 'Remove';
-        closeBtn.onclick = () => card.remove();
-        card.appendChild(closeBtn);
-
-        // Create barcode SVG
-        const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        barcodeSvg.classList.add('barcode-svg');
-        card.appendChild(barcodeSvg);
-
-        // Generate barcode
-        JsBarcode(barcodeSvg, id, {
-            format: "CODE128",
-            lineColor: "#000",
-            width: 2,
-            height: 60,
-            displayValue: true
-        });
-
-        // Info below barcode
-        const infoDiv = document.createElement('div');
-        infoDiv.classList.add('barcode-info');
-        if (name || weight || address) {
-            if (name) {
-                const nameEl = document.createElement('p');
-                nameEl.textContent = name;
-                infoDiv.appendChild(nameEl);
-            }
-            if (address) {
-                const addressEl = document.createElement('p');
-                addressEl.textContent = address;
-                infoDiv.appendChild(addressEl);
-            }
-            if (weight) {
-                const weightEl = document.createElement('p');
-                weightEl.textContent = weight;
-                infoDiv.appendChild(weightEl);
-            }
+        function showPreviewModal() {
+            previewModal.style.display = 'flex';
         }
-        card.appendChild(infoDiv);
+        function hidePreviewModal() {
+            previewModal.style.display = 'none';
+            livePreviewSvg.innerHTML = '';
+            manualInput.value = '';
+        }
 
-        // Add card to grid
-        document.getElementById('barcodeContainer').prepend(card);
-    }
-
-        // Live update the barcode preview while typing
+        // Show modal when typing in input
         const manualInput = document.getElementById('manual-barcode-input');
         manualInput.addEventListener('input', () => {
             const value = manualInput.value.trim();
@@ -209,10 +205,81 @@
                     height: 60,
                     displayValue: true
                 });
+                showPreviewModal();
             } else {
-                livePreviewSvg.innerHTML = ""; // Clear live preview if input is empty
+                hidePreviewModal();
             }
         });
+
+        // Hide modal on close button click
+        closeModalBtn.onclick = hidePreviewModal;
+
+        // Hide modal when clicking outside modal content
+        previewModal.onclick = function(event) {
+            if (event.target === previewModal) {
+                hidePreviewModal();
+            }
+        };
+
+        // Hide modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hidePreviewModal();
+            }
+        });
+
+        function createBarcodeRow(id, name = "", weight = "", address = "") {
+            // Create card container
+            const card = document.createElement('div');
+            card.classList.add('barcode-card');
+
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.title = 'Remove';
+            closeBtn.onclick = () => card.remove();
+            card.appendChild(closeBtn);
+
+            // Create barcode SVG
+            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            barcodeSvg.classList.add('barcode-svg');
+            card.appendChild(barcodeSvg);
+
+            // Generate barcode
+            JsBarcode(barcodeSvg, id, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 60,
+                displayValue: true
+            });
+
+            // Info below barcode
+            const infoDiv = document.createElement('div');
+            infoDiv.classList.add('barcode-info');
+            if (name || weight || address) {
+                if (name) {
+                    const nameEl = document.createElement('p');
+                    nameEl.textContent = name;
+                    infoDiv.appendChild(nameEl);
+                }
+                if (address) {
+                    const addressEl = document.createElement('p');
+                    addressEl.textContent = address;
+                    infoDiv.appendChild(addressEl);
+                }
+                if (weight) {
+                    const weightEl = document.createElement('p');
+                    weightEl.textContent = weight;
+                    infoDiv.appendChild(weightEl);
+                }
+            }
+            card.appendChild(infoDiv);
+
+            // Add card to grid
+            document.getElementById('barcodeContainer').prepend(card);
+        }
 
         // Add barcode when button is clicked
         function addBarcode() {
@@ -221,6 +288,7 @@
                 createBarcodeRow(value);
                 manualInput.value = ""; // Clear input
                 livePreviewSvg.innerHTML = ""; // Clear live preview
+                hidePreviewModal(); // Dismiss the modal
             } else {
                 alert("Please enter a valid barcode number.");
             }
