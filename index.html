@@ -54,6 +54,7 @@
     }
 
     .barcode-card {
+        position: relative; /* Needed for absolute positioning of close button */
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
@@ -63,6 +64,24 @@
         align-items: center;
         min-width: 0;
         box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        background: transparent;
+        border: none;
+        color: #888;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        z-index: 2;
+        transition: color 0.2s;
+    }
+    .close-btn:hover {
+        color: #d00;
     }
 
     .barcode-svg {
@@ -126,49 +145,57 @@
         livePreviewContainer.appendChild(livePreviewSvg);
 
         function createBarcodeRow(id, name = "", weight = "", address = "") {
-            // Create card container
-            const card = document.createElement('div');
-            card.classList.add('barcode-card');
+        // Create card container
+        const card = document.createElement('div');
+        card.classList.add('barcode-card');
 
-            // Create barcode SVG
-            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            barcodeSvg.classList.add('barcode-svg');
-            card.appendChild(barcodeSvg);
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = 'Remove';
+        closeBtn.onclick = () => card.remove();
+        card.appendChild(closeBtn);
 
-            // Generate barcode
-            JsBarcode(barcodeSvg, id, {
-                format: "CODE128",
-                lineColor: "#000",
-                width: 2,
-                height: 60,
-                displayValue: true
-            });
+        // Create barcode SVG
+        const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        barcodeSvg.classList.add('barcode-svg');
+        card.appendChild(barcodeSvg);
 
-            // Info below barcode
-            const infoDiv = document.createElement('div');
-            infoDiv.classList.add('barcode-info');
-            if (name || weight || address) {
-                if (name) {
-                    const nameEl = document.createElement('p');
-                    nameEl.textContent = name;
-                    infoDiv.appendChild(nameEl);
-                }
-                if (address) {
-                    const addressEl = document.createElement('p');
-                    addressEl.textContent = address;
-                    infoDiv.appendChild(addressEl);
-                }
-                if (weight) {
-                    const weightEl = document.createElement('p');
-                    weightEl.textContent = weight;
-                    infoDiv.appendChild(weightEl);
-                }
+        // Generate barcode
+        JsBarcode(barcodeSvg, id, {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 2,
+            height: 60,
+            displayValue: true
+        });
+
+        // Info below barcode
+        const infoDiv = document.createElement('div');
+        infoDiv.classList.add('barcode-info');
+        if (name || weight || address) {
+            if (name) {
+                const nameEl = document.createElement('p');
+                nameEl.textContent = name;
+                infoDiv.appendChild(nameEl);
             }
-            card.appendChild(infoDiv);
-
-            // Add card to grid
-            document.getElementById('barcodeContainer').prepend(card);
+            if (address) {
+                const addressEl = document.createElement('p');
+                addressEl.textContent = address;
+                infoDiv.appendChild(addressEl);
+            }
+            if (weight) {
+                const weightEl = document.createElement('p');
+                weightEl.textContent = weight;
+                infoDiv.appendChild(weightEl);
+            }
         }
+        card.appendChild(infoDiv);
+
+        // Add card to grid
+        document.getElementById('barcodeContainer').prepend(card);
+    }
 
         // Live update the barcode preview while typing
         const manualInput = document.getElementById('manual-barcode-input');
