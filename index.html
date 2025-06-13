@@ -5,89 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Barcode Generator</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
 
-        .top-bar {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            z-index: 10;
-        }
+    .top-bar {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        z-index: 10;
+    }
 
-        .top-bar input {
-            flex: 1;
-            margin-right: 10px;
-            padding: 8px;
-            font-size: 16px;
-        }
+    .top-bar input {
+        flex: 1;
+        margin-right: 10px;
+        padding: 8px;
+        font-size: 16px;
+    }
 
-        .top-bar button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+    .top-bar button {
+        margin-left: 10px;
+        padding: 10px 20px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
 
-        .row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
+    #barcodeContainer {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        width: 100%;
+    }
 
-        .barcode-column {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .barcode-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 8px 6px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
 
-        .info-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+    .barcode-svg {
+        width: 100%;
+        max-width: 200px;
+        min-height: 60px;
+        margin-bottom: 6px;
+    }
 
-        #file-input {
-            display: none;
-        }
+    .barcode-info {
+        width: 100%;
+        font-size: 13px;
+        line-height: 1.2;
+        color: #333;
+        text-align: left;
+        word-break: break-word;
+    }
 
-        #live-preview {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+    .barcode-info p {
+        margin: 0 0 2px 0;
+        padding: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-        #live-preview svg {
-            width: 100%;
-        }
-    </style>
+    #live-preview {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    #live-preview svg {
+        width: 100%;
+        max-width: 200px;
+    }
+</style>
 </head>
 <body>
     <div class="top-bar">
         <input type="text" id="manual-barcode-input" placeholder="Enter barcode number" />
         <button id="add-barcode-button">Add Barcode</button>
         <button id="upload-button">Upload parcel data entity JSON File</button>
-        <input type="file" id="file-input" accept=".json">
     </div>
 
     <div class="container">
@@ -108,15 +126,14 @@
         livePreviewContainer.appendChild(livePreviewSvg);
 
         function createBarcodeRow(id, name = "", weight = "", address = "") {
-            const row = document.createElement('div');
-            row.classList.add('row');
+            // Create card container
+            const card = document.createElement('div');
+            card.classList.add('barcode-card');
 
-            // Create barcode display column
-            const barcodeCol = document.createElement('div');
-            barcodeCol.classList.add('barcode-column');
+            // Create barcode SVG
             const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            barcodeSvg.style.width = '100%';
-            barcodeCol.appendChild(barcodeSvg);
+            barcodeSvg.classList.add('barcode-svg');
+            card.appendChild(barcodeSvg);
 
             // Generate barcode
             JsBarcode(barcodeSvg, id, {
@@ -127,29 +144,30 @@
                 displayValue: true
             });
 
-            // Create info column for JSON data (optional)
-            const infoCol = document.createElement('div');
-            infoCol.classList.add('info-column');
+            // Info below barcode
+            const infoDiv = document.createElement('div');
+            infoDiv.classList.add('barcode-info');
             if (name || weight || address) {
-                const nameEl = document.createElement('p');
-                nameEl.textContent = `Receipient Name: ${name}`;
-                const addressEl = document.createElement('p');
-                addressEl.textContent = `Address: ${address}`;
-                const weightEl = document.createElement('p');
-                weightEl.textContent = `Weight: ${weight}`;
-                infoCol.appendChild(nameEl);
-                infoCol.appendChild(addressEl);
-                infoCol.appendChild(weightEl);
+                if (name) {
+                    const nameEl = document.createElement('p');
+                    nameEl.textContent = name;
+                    infoDiv.appendChild(nameEl);
+                }
+                if (address) {
+                    const addressEl = document.createElement('p');
+                    addressEl.textContent = address;
+                    infoDiv.appendChild(addressEl);
+                }
+                if (weight) {
+                    const weightEl = document.createElement('p');
+                    weightEl.textContent = weight;
+                    infoDiv.appendChild(weightEl);
+                }
             }
+            card.appendChild(infoDiv);
 
-            // Append columns to row
-            row.appendChild(barcodeCol);
-            if (name || weight || address) {
-                row.appendChild(infoCol);
-            }
-
-            // Append row to container
-            document.getElementById('barcodeContainer').prepend(row); // Add new barcode at the top
+            // Add card to grid
+            document.getElementById('barcodeContainer').prepend(card);
         }
 
         // Live update the barcode preview while typing
