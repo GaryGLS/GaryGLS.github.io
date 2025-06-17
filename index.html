@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="favicon.png" type="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Barcode Generator</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-<style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-    }
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
 
     .top-bar {
         position: sticky;
@@ -160,6 +162,10 @@
     </div>
 
     <div class="container">
+
+        <h1>HaandScanner barcode generator</h1>
+        <!-- Live preview for the manual barcode -->
+        <div id="live-preview"></div>
         <!-- Container for dynamic rows -->
         <div id="barcodeContainer"></div>
     </div>
