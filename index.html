@@ -13,149 +13,193 @@
             font-family: Arial, sans-serif;
         }
 
-        .top-bar {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            z-index: 10;
-        }
+    .top-bar {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        z-index: 10;
+    }
 
-        .top-bar input {
-            flex: 1;
-            margin-right: 10px;
-            padding: 8px;
-            font-size: 16px;
-        }
+    .top-bar input {
+        flex: 1;
+        margin-right: 10px;
+        padding: 8px;
+        font-size: 16px;
+    }
 
-        .top-bar button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+    .top-bar button {
+        margin-left: 10px;
+        padding: 10px 20px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
 
-        .row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
+    #barcodeContainer {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        width: 100%;
+    }
 
-        .barcode-column {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .barcode-card {
+        position: relative; /* Needed for absolute positioning of close button */
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 8px 6px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
 
-        .info-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+    .close-btn {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        background: transparent;
+        border: none;
+        color: #888;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        z-index: 2;
+        transition: color 0.2s;
+    }
+    .close-btn:hover {
+        color: #d00;
+    }
 
-        #file-input {
-            display: none;
-        }
+    .barcode-svg {
+        width: 100%;
+        max-width: 200px;
+        min-height: 60px;
+        margin-bottom: 6px;
+    }
 
-        #live-preview {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+    .barcode-info {
+        width: 100%;
+        font-size: 13px;
+        line-height: 1.2;
+        color: #333;
+        text-align: left;
+        word-break: break-word;
+    }
 
-        #live-preview svg {
-            width: 100%;
-        }
-    </style>
+    .barcode-info p {
+        margin: 0 0 2px 0;
+        padding: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.3);
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: #fff;
+        padding: 24px 24px 16px 24px;
+        border-radius: 8px;
+        min-width: 260px;
+        min-height: 120px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .close-modal {
+        position: absolute;
+        top: 8px;
+        right: 14px;
+        font-size: 22px;
+        color: #888;
+        cursor: pointer;
+        font-weight: bold;
+        background: none;
+        border: none;
+        z-index: 2;
+    }
+    .close-modal:hover {
+        color: #d00;
+    }
+
+    #live-preview svg {
+        width: 100%;
+        max-width: 200px;
+    }
+</style>
 </head>
 <body>
     <div class="top-bar">
         <input type="text" id="manual-barcode-input" placeholder="Enter barcode number" />
         <button id="add-barcode-button">Add Barcode</button>
         <button id="upload-button">Upload parcel data entity JSON File</button>
-        <input type="file" id="file-input" accept=".json">
     </div>
 
     <div class="container">
-        <h1>Gary's barcode generator</h1>
+
+        <h1>HaandScanner barcode generator</h1>
         <!-- Live preview for the manual barcode -->
         <div id="live-preview"></div>
         <!-- Container for dynamic rows -->
         <div id="barcodeContainer"></div>
     </div>
 
+    <!-- Modal for live preview -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <div id="live-preview"></div>
+        </div>
+    </div>
+
     <!-- Add accept attribute to file input -->
     <input type="file" id="file-input" accept=".json" style="display: none;">
 
     <script>
-        // Create a live preview for the manually entered barcode
+        // Modal logic
+        const previewModal = document.getElementById('preview-modal');
+        const closeModalBtn = document.getElementById('close-modal');
         const livePreviewContainer = document.getElementById('live-preview');
         const livePreviewSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         livePreviewSvg.style.width = '100%';
         livePreviewContainer.appendChild(livePreviewSvg);
 
-        function createBarcodeRow(id, name = "", weight = "", address = "") {
-            const row = document.createElement('div');
-            row.classList.add('row');
-
-            // Create barcode display column
-            const barcodeCol = document.createElement('div');
-            barcodeCol.classList.add('barcode-column');
-            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            barcodeSvg.style.width = '100%';
-            barcodeCol.appendChild(barcodeSvg);
-
-            // Generate barcode
-            JsBarcode(barcodeSvg, id, {
-                format: "CODE128",
-                lineColor: "#000",
-                width: 2,
-                height: 60,
-                displayValue: true
-            });
-
-            // Create info column for JSON data (optional)
-            const infoCol = document.createElement('div');
-            infoCol.classList.add('info-column');
-            if (name || weight || address) {
-                const nameEl = document.createElement('p');
-                nameEl.textContent = `Receipient Name: ${name}`;
-                const addressEl = document.createElement('p');
-                addressEl.textContent = `Address: ${address}`;
-                const weightEl = document.createElement('p');
-                weightEl.textContent = `Weight: ${weight}`;
-                infoCol.appendChild(nameEl);
-                infoCol.appendChild(addressEl);
-                infoCol.appendChild(weightEl);
-            }
-
-            // Append columns to row
-            row.appendChild(barcodeCol);
-            if (name || weight || address) {
-                row.appendChild(infoCol);
-            }
-
-            // Append row to container
-            document.getElementById('barcodeContainer').prepend(row); // Add new barcode at the top
+        function showPreviewModal() {
+            previewModal.style.display = 'flex';
+        }
+        function hidePreviewModal() {
+            previewModal.style.display = 'none';
+            livePreviewSvg.innerHTML = '';
+            manualInput.value = '';
         }
 
-        // Live update the barcode preview while typing
+        // Show modal when typing in input
         const manualInput = document.getElementById('manual-barcode-input');
         manualInput.addEventListener('input', () => {
             const value = manualInput.value.trim();
@@ -167,10 +211,81 @@
                     height: 60,
                     displayValue: true
                 });
+                showPreviewModal();
             } else {
-                livePreviewSvg.innerHTML = ""; // Clear live preview if input is empty
+                hidePreviewModal();
             }
         });
+
+        // Hide modal on close button click
+        closeModalBtn.onclick = hidePreviewModal;
+
+        // Hide modal when clicking outside modal content
+        previewModal.onclick = function(event) {
+            if (event.target === previewModal) {
+                hidePreviewModal();
+            }
+        };
+
+        // Hide modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hidePreviewModal();
+            }
+        });
+
+        function createBarcodeRow(id, name = "", weight = "", address = "") {
+            // Create card container
+            const card = document.createElement('div');
+            card.classList.add('barcode-card');
+
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.title = 'Remove';
+            closeBtn.onclick = () => card.remove();
+            card.appendChild(closeBtn);
+
+            // Create barcode SVG
+            const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            barcodeSvg.classList.add('barcode-svg');
+            card.appendChild(barcodeSvg);
+
+            // Generate barcode
+            JsBarcode(barcodeSvg, id, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 60,
+                displayValue: true
+            });
+
+            // Info below barcode
+            const infoDiv = document.createElement('div');
+            infoDiv.classList.add('barcode-info');
+            if (name || weight || address) {
+                if (name) {
+                    const nameEl = document.createElement('p');
+                    nameEl.textContent = name;
+                    infoDiv.appendChild(nameEl);
+                }
+                if (address) {
+                    const addressEl = document.createElement('p');
+                    addressEl.textContent = address;
+                    infoDiv.appendChild(addressEl);
+                }
+                if (weight) {
+                    const weightEl = document.createElement('p');
+                    weightEl.textContent = weight;
+                    infoDiv.appendChild(weightEl);
+                }
+            }
+            card.appendChild(infoDiv);
+
+            // Add card to grid
+            document.getElementById('barcodeContainer').prepend(card);
+        }
 
         // Add barcode when button is clicked
         function addBarcode() {
@@ -179,6 +294,7 @@
                 createBarcodeRow(value);
                 manualInput.value = ""; // Clear input
                 livePreviewSvg.innerHTML = ""; // Clear live preview
+                hidePreviewModal(); // Dismiss the modal
             } else {
                 alert("Please enter a valid barcode number.");
             }
@@ -202,13 +318,6 @@
         document.getElementById('file-input').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
-                // Check if the selected file is the desired one
-                const desiredFileName = "hsc.parceldataentity.json";
-                if (file.name !== desiredFileName) {
-                    alert(`Please select the file named "${desiredFileName}".`);
-                    return;
-                }
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
